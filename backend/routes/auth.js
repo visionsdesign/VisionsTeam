@@ -4,7 +4,9 @@ const router = express.Router();
 const { writeTokens } = require('../hubstaffTokens');
 
 const redirectUri = () =>
-  `http://localhost:${process.env.PORT || 3001}/api/auth/hubstaff/callback`;
+  process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api/auth/hubstaff/callback`
+    : `http://localhost:${process.env.PORT || 3001}/api/auth/hubstaff/callback`;
 
 router.get('/hubstaff', (req, res) => {
   const nonce = require('crypto').randomBytes(16).toString('hex');

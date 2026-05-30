@@ -1,0 +1,17 @@
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# Proxy /api/* to the deployed backend
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://visionsteam-api.onrender.com/api/:splat"
+  status = 200
+  force  = true
+
+# SPA fallback — all other routes serve index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
