@@ -1,5 +1,6 @@
 import React from 'react';
 import { healthColor, healthLabel } from '../utils/healthScore.js';
+import Avatar from './Avatar.jsx';
 
 function getRecommendations(member) {
   const { tasks = {}, healthScore = 65, trackedHours = 0 } = member;
@@ -71,7 +72,7 @@ export default function Efficiency({ team }) {
           return (
             <div className="efficiency-row" key={member.id}>
               <div className="efficiency-member-header">
-                <div className="avatar" style={{ background: member.color }}>{member.initials}</div>
+                <Avatar initials={member.initials} color={member.color} profilePicture={member.profilePicture} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{member.name}</span>

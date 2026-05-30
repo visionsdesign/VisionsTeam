@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
 import { useAuth } from './hooks/useAuth.js';
 import { useTeamData } from './hooks/useTeamData.js';
+import { useProjectData } from './hooks/useProjectData.js';
 import LoginScreen from './components/LoginScreen.jsx';
 import DateRangePicker, { getRangeForPreset } from './components/DateRangePicker.jsx';
 import Overview from './components/Overview.jsx';
 import Capacity from './components/Capacity.jsx';
 import Efficiency from './components/Efficiency.jsx';
 import WorkloadPlanning from './components/WorkloadPlanning.jsx';
+import Projects from './components/Projects.jsx';
+import Schedule from './components/Schedule.jsx';
 
 const TABS = [
   { id: 'overview',   label: 'Overview' },
   { id: 'capacity',   label: 'Capacity' },
   { id: 'efficiency', label: 'Efficiency' },
   { id: 'workload',   label: 'Workload Planning' },
+  { id: 'projects',   label: 'Projects' },
+  { id: 'schedule',   label: 'Schedule' },
 ];
 
 const DEFAULT_RANGE = { ...getRangeForPreset('this-week'), preset: 'this-week' };
@@ -28,6 +33,11 @@ export default function App() {
   const [dateRange, setDateRange] = useState(DEFAULT_RANGE);
 
   const { team, loading, error, refresh, lastRefresh } = useTeamData({
+    from: dateRange.from,
+    to: dateRange.to,
+  });
+
+  const { projects, loading: projectsLoading, error: projectsError } = useProjectData({
     from: dateRange.from,
     to: dateRange.to,
   });
@@ -95,6 +105,15 @@ export default function App() {
           {activeTab === 'capacity'   && <Capacity team={team} />}
           {activeTab === 'efficiency' && <Efficiency team={team} />}
           {activeTab === 'workload'   && <WorkloadPlanning team={team} />}
+          {activeTab === 'projects'   && (
+            <Projects
+              projects={projects}
+              loading={projectsLoading}
+              error={projectsError}
+              dateRange={dateRange}
+            />
+          )}
+          {activeTab === 'schedule'   && <Schedule team={team} />}
         </>
       )}
     </div>

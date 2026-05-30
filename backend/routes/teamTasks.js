@@ -92,6 +92,7 @@ function getMockData() {
 }
 
 let cachedTeamId = null;
+let cachedProfilePics = null;
 
 async function getTeamId(apiKey) {
   if (cachedTeamId) return cachedTeamId;
@@ -100,6 +101,22 @@ async function getTeamId(apiKey) {
   });
   cachedTeamId = res.data.teams[0].id;
   return cachedTeamId;
+}
+
+async function getProfilePics(apiKey) {
+  if (cachedProfilePics) return cachedProfilePics;
+  const res = await axios.get('https://api.clickup.com/api/v2/team', {
+    headers: { Authorization: apiKey },
+  });
+  const map = {};
+  for (const team of res.data.teams || []) {
+    for (const m of team.members || []) {
+      const u = m.user || {};
+      if (u.id && u.profilePicture) map[String(u.id)] = u.profilePicture;
+    }
+  }
+  cachedProfilePics = map;
+  return map;
 }
 
 async function fetchMemberTasks(apiKey, teamId, userId) {
@@ -130,10 +147,12 @@ async function fetchMemberTasks(apiKey, teamId, userId) {
       id: t.id,
       name: t.name,
       status: t.status?.status,
-      due_date: t.due_date,
+      start_date: t.start_date ? new Date(parseInt(t.start_date)).toISOString().slice(0, 10) : null,
+      due_date: t.due_date ? new Date(parseInt(t.due_date)).toISOString().slice(0, 10) : null,
       priority: t.priority?.priority,
       url: t.url,
       list: t.list?.name,
+      folder: t.folder?.name || t.list?.name,
     }));
   };
 
@@ -154,18 +173,22 @@ router.get('/', async (req, res, next) => {
   }
 
   try {
-    const teamId = await getTeamId(apiKey);
+    const [teamId, profilePics] = await Promise.all([
+      getTeamId(apiKey),
+      getProfilePics(apiKey).catch(() => ({})),
+    ]);
     const results = await Promise.all(
       TEAM.map(async (member) => {
         try {
           const tasks = await fetchMemberTasks(apiKey, teamId, member.id);
-          return { ...member, tasks, healthScore: calcHealth(tasks) };
+          return { ...member, tasks, healthScore: calcHealth(tasks), profilePicture: profilePics[member.id] || null };
         } catch (err) {
           console.error(`Error fetching tasks for ${member.name}:`, err.message);
           return {
             ...member,
             tasks: { inProgress: [], upcoming: [], done: [], overdue: [], blockers: [] },
             healthScore: 65,
+            profilePicture: profilePics[member.id] || null,
           };
         }
       })

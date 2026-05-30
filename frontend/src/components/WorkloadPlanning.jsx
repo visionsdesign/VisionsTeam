@@ -24,8 +24,8 @@ export default function WorkloadPlanning({ team }) {
     ),
   })).sort((a, b) => b.assignScore - a.assignScore);
 
-  // Project involvement matrix: collect unique list names from tasks
-  const allLists = new Set();
+  // Project involvement matrix: group by folder (ClickUp project), not individual list
+  const allFolders = new Set();
   team.forEach(m => {
     const allTasks = [
       ...(m.tasks?.inProgress || []),
@@ -34,13 +34,45 @@ export default function WorkloadPlanning({ team }) {
       ...(m.tasks?.overdue || []),
       ...(m.tasks?.blockers || []),
     ];
-    allTasks.forEach(t => { if (t.list && t.list !== 'Mock List') allLists.add(t.list); });
+    allTasks.forEach(t => {
+      if (t.folder && t.folder !== 'Mock List' && t.folder !== 'hidden') allFolders.add(t.folder);
+    });
   });
 
-  // Fallback: use mock list names if no real lists
-  const projects = allLists.size > 0
-    ? [...allLists]
-    : ['Sprint Board', 'Marketing', 'Dev Tasks', 'Design', 'Client Projects', 'Operations'];
+  // Fallback: use mock project names if no real data
+  // Rank folders by total tasks across team; keep only those with multi-member involvement
+  let projects;
+  if (allFolders.size > 0) {
+    const folderTotals = {};
+    const folderMembers = {};
+    team.forEach(m => {
+      const allTasks = [
+        ...(m.tasks?.inProgress || []),
+        ...(m.tasks?.upcoming || []),
+        ...(m.tasks?.done || []),
+        ...(m.tasks?.overdue || []),
+        ...(m.tasks?.blockers || []),
+      ];
+      allTasks.forEach(t => {
+        if (!t.folder || t.folder === 'Mock List') return;
+        folderTotals[t.folder] = (folderTotals[t.folder] || 0) + 1;
+        folderMembers[t.folder] = folderMembers[t.folder] || new Set();
+        folderMembers[t.folder].add(m.id);
+      });
+    });
+    projects = [...allFolders]
+      .filter(f => (folderMembers[f]?.size || 0) >= 2)
+      .sort((a, b) => (folderTotals[b] || 0) - (folderTotals[a] || 0))
+      .slice(0, 12);
+    // If fewer than 3 multi-member folders, fall back to top folders by task count
+    if (projects.length < 3) {
+      projects = [...allFolders]
+        .sort((a, b) => (folderTotals[b] || 0) - (folderTotals[a] || 0))
+        .slice(0, 10);
+    }
+  } else {
+    projects = ['Sprint Board', 'Marketing', 'Dev Tasks', 'Design', 'Client Projects', 'Operations'];
+  }
 
   const matrixData = team.map(m => {
     const allTasks = [
@@ -52,7 +84,7 @@ export default function WorkloadPlanning({ team }) {
     ];
     const counts = {};
     projects.forEach(p => {
-      counts[p] = allTasks.filter(t => t.list === p).length;
+      counts[p] = allTasks.filter(t => t.folder === p).length;
     });
     return { ...m, counts };
   });

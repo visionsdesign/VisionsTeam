@@ -1,5 +1,49 @@
 const express = require('express');
+const axios = require('axios');
 const router = express.Router();
+const { writeTokens } = require('../hubstaffTokens');
+
+const redirectUri = () =>
+  `http://localhost:${process.env.PORT || 3001}/api/auth/hubstaff/callback`;
+
+router.get('/hubstaff', (req, res) => {
+  const nonce = require('crypto').randomBytes(16).toString('hex');
+  const params = new URLSearchParams({
+    response_type: 'code',
+    redirect_uri: redirectUri(),
+    scope: 'hubstaff:read tasks:read openid',
+    client_id: process.env.HUBSTAFF_CLIENT_ID,
+    nonce,
+  });
+  res.redirect(`https://account.hubstaff.com/authorizations/new?${params}`);
+});
+
+router.get('/hubstaff/callback', async (req, res, next) => {
+  try {
+    const { code } = req.query;
+    if (!code) return res.status(400).send('Missing authorisation code');
+
+    const tokenRes = await axios.post('https://account.hubstaff.com/access_tokens', null, {
+      params: {
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri(),
+        client_id: process.env.HUBSTAFF_CLIENT_ID,
+        client_secret: process.env.HUBSTAFF_CLIENT_SECRET,
+      },
+    });
+
+    writeTokens({
+      access_token: tokenRes.data.access_token,
+      refresh_token: tokenRes.data.refresh_token,
+      expires_at: Date.now() + (tokenRes.data.expires_in || 7200) * 1000,
+    });
+
+    res.send('<p style="font-family:sans-serif">HubStaff connected successfully. You can close this window.</p>');
+  } catch (err) {
+    next(err);
+  }
+});
 
 const ADMIN_USER = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'changeme';

@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
+const { getAccessToken } = require('../hubstaffTokens');
 
 const TEAM = [
   { id: '32497410', name: 'Daniel Bate',     initials: 'DB', role: 'Developer',       color: '#7F77DD' },
@@ -80,10 +81,12 @@ async function getOrgId(token) {
 }
 
 router.get('/', async (req, res, next) => {
-  const token = process.env.HUBSTAFF_TOKEN;
   const { from, to } = req.query;
 
-  if (!token) {
+  let token;
+  try {
+    token = await getAccessToken();
+  } catch {
     return res.json(getMockData());
   }
 
@@ -91,12 +94,12 @@ router.get('/', async (req, res, next) => {
     const orgId = await getOrgId(token);
     const headers = { Authorization: `Bearer ${token}` };
 
-    // Get org members
+    // Get org members with user details (names are in the included users array)
     const membersRes = await axios.get(
       `https://api.hubstaff.com/v2/organizations/${orgId}/members`,
-      { headers }
+      { headers, params: { include: 'users' } }
     );
-    const hubstaffMembers = membersRes.data.members || [];
+    const hubstaffMembers = membersRes.data.users || [];
 
     // Get daily activities
     const activitiesRes = await axios.get(
@@ -119,7 +122,7 @@ router.get('/', async (req, res, next) => {
         m => (m.name || '').split(' ')[0].toLowerCase() === firstName
       );
 
-      const hsUserId = hsMatch?.user_id;
+      const hsUserId = hsMatch?.id;
       const memberActivities = hsUserId
         ? activities.filter(a => a.user_id === hsUserId)
         : [];

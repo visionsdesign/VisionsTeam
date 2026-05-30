@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const teamTasksRouter = require('./routes/teamTasks');
 const teamHoursRouter = require('./routes/teamHours');
+const projectsRouter = require('./routes/projects');
 const authRouter = require('./routes/auth');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/team-tasks', teamTasksRouter);
 app.use('/api/team-hours', teamHoursRouter);
+app.use('/api/projects', projectsRouter);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

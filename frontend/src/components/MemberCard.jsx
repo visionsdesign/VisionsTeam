@@ -1,5 +1,6 @@
 import React from 'react';
 import { healthColor, healthLabel } from '../utils/healthScore.js';
+import Avatar from './Avatar.jsx';
 
 const STATUS_COLORS = {
   'in progress': '#7F77DD',
@@ -30,7 +31,7 @@ function TaskGroup({ title, tasks, dotColor }) {
 }
 
 export default function MemberCard({ member, expanded, onToggle }) {
-  const { name, role, initials, color, tasks = {}, healthScore = 65 } = member;
+  const { name, role, initials, color, profilePicture = null, tasks = {}, healthScore = 65 } = member;
   const { inProgress = [], upcoming = [], done = [], overdue = [], blockers = [] } = tasks;
   const hColor = healthColor(healthScore);
   const hLabel = healthLabel(healthScore);
@@ -38,7 +39,7 @@ export default function MemberCard({ member, expanded, onToggle }) {
   return (
     <div className="member-card">
       <div className="member-card-header" onClick={onToggle}>
-        <div className="avatar" style={{ background: color }}>{initials}</div>
+        <Avatar initials={initials} color={color} profilePicture={profilePicture} />
         <div className="member-card-info">
           <div className="name">{name}</div>
           <div className="role">{role}</div>
