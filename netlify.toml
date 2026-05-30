@@ -6,7 +6,7 @@
 # Proxy /api/* to the deployed backend
 [[redirects]]
   from   = "/api/*"
-  to     = "https://visionsteam-api.onrender.com/api/:splat"
+  to     = "https://visionsteam.onrender.com/api/:splat"
   status = 200
   force  = true
 
