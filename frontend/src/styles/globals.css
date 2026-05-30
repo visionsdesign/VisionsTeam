@@ -503,6 +503,172 @@ button { cursor: pointer; font-family: inherit; }
 .health-factor-fill { height: 100%; border-radius: 50px; }
 .health-factor-val { width: 30px; text-align: right; color: var(--text-muted); flex-shrink: 0; }
 
+/* ── Header right side ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.last-refresh {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── Date Range Picker ── */
+.date-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.date-presets {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.preset-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.preset-btn:hover { background: var(--surface2); color: var(--text); }
+.preset-btn.active { background: var(--accent); color: #fff; }
+.date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.date-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.date-input:focus { outline: none; border-color: var(--accent); }
+.date-input::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+.date-sep { color: var(--text-muted); font-size: 0.85rem; }
+
+/* ── Login Screen ── */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 20px;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.login-logo {
+  width: 52px;
+  height: 52px;
+  background: var(--accent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.login-logo-icon {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+.login-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.form-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+.form-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+.form-input:focus { outline: none; border-color: var(--accent); }
+.login-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  text-align: center;
+}
+.login-btn {
+  width: 100%;
+  padding: 11px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
@@ -513,4 +679,8 @@ button { cursor: pointer; font-family: inherit; }
   .hours-bar-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 8px; }
   .summary-strip { flex-direction: column; }
   .dashboard { padding: 16px 12px; }
+  .header-right { flex-direction: column; align-items: flex-start; }
+  .date-presets { flex-wrap: wrap; }
+  .date-inputs { flex-wrap: wrap; }
+  .login-card { padding: 28px 20px; }
 }

@@ -1,17 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-function getWeekRange() {
-  const now = new Date();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const fmt = (d) => d.toISOString().slice(0, 10);
-  return { from: fmt(monday), to: fmt(sunday) };
-}
-
-export function useTeamData() {
+export function useTeamData({ from, to }) {
   const [tasks, setTasks] = useState([]);
   const [hours, setHours] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,9 +8,9 @@ export function useTeamData() {
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const fetchAll = useCallback(async () => {
+    if (!from || !to) return;
     setLoading(true);
     setError(null);
-    const { from, to } = getWeekRange();
     try {
       const [tasksRes, hoursRes] = await Promise.all([
         fetch(`/api/team-tasks?from=${from}&to=${to}`).then(r => r.json()),
@@ -35,7 +24,7 @@ export function useTeamData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [from, to]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
