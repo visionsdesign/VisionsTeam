@@ -1,5 +1,6 @@
 node_modules/
 .env
 dist/
+glass123/
 .DS_Store
 backend/.hubstaff-tokens.json
