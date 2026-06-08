@@ -1,5 +1,4 @@
-import React, { useState, Suspense } from 'react';
-const GlassLogo = React.lazy(() => import('./GlassLogo.jsx'));
+import React, { useState } from 'react';
 
 export default function LoginScreen({ onLogin, error, loading }) {
   const [username, setUsername] = useState('');
@@ -14,9 +13,7 @@ export default function LoginScreen({ onLogin, error, loading }) {
     <div className="login-screen">
       <div className="login-card">
         <div className="login-logo">
-          <Suspense fallback={<span className="login-logo-icon">V</span>}>
-            <GlassLogo style={{ height: 180 }} />
-          </Suspense>
+          <span className="login-logo-icon">V</span>
         </div>
         <h1 className="login-title">Team Dashboard</h1>
         <p className="login-subtitle">Sign in to continue</p>
