@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Potentially — Project Status</title>
+<style>
+  :root {
+    --bg: #0e0f1a;
+    --surface: #171a2b;
+    --surface2: #1f2336;
+    --border: #2a2f48;
+    --text: #eef1f8;
+    --text-muted: #9aa3c0;
+    --accent: #7F77DD;
+    --accent-soft: rgba(127,119,221,0.15);
+    --open: #f0a030;
+    --open-soft: rgba(240,160,48,0.15);
+    --progress: #378ADD;
+    --progress-soft: rgba(55,138,221,0.15);
+    --resolved: #2bb673;
+    --resolved-soft: rgba(43,182,115,0.15);
+    --closed: #768099;
+    --closed-soft: rgba(118,128,153,0.15);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 70% -10%, rgba(127,119,221,0.12), transparent 60%), var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+    padding: 40px 20px 64px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  /* Header */
+  .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 32px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #4f48a8);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.25rem; color: #fff; letter-spacing: -0.5px;
+    box-shadow: 0 6px 20px rgba(127,119,221,0.35);
+  }
+  .brand h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.4px; }
+  .brand .sub { color: var(--text-muted); font-size: 0.9rem; }
+  .meta { text-align: right; color: var(--text-muted); font-size: 0.82rem; }
+  .meta .gen { color: var(--text); font-weight: 600; font-size: 0.9rem; }
+  .meta a { color: var(--accent); text-decoration: none; }
+
+  /* Summary cards */
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 18px 16px;
+    position: relative; overflow: hidden;
+  }
+  .card .num { font-size: 2rem; font-weight: 750; letter-spacing: -1px; line-height: 1.1; }
+  .card .lbl { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .card .strip { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .card.total .strip { background: var(--accent); }
+  .card.open .num { color: var(--open); }
+  .card.open .strip { background: var(--open); }
+  .card.progress .num { color: var(--progress); }
+  .card.progress .strip { background: var(--progress); }
+  .card.resolved .num { color: var(--resolved); }
+  .card.resolved .strip { background: var(--resolved); }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-bottom: 28px;
+  }
+  .progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .progress-head .title { font-weight: 600; font-size: 0.95rem; }
+  .progress-head .pct { color: var(--text-muted); font-size: 0.85rem; }
+  .bar { height: 12px; border-radius: 99px; background: var(--surface2); overflow: hidden; display: flex; }
+  .bar span { height: 100%; display: block; }
+  .bar .b-open { background: var(--open); }
+  .bar .b-progress { background: var(--progress); }
+  .bar .b-resolved { background: var(--resolved); }
+  .legend { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+  .legend div { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--text-muted); }
+  .dot { width: 9px; height: 9px; border-radius: 99px; }
+  .dot.open { background: var(--open); }
+  .dot.progress { background: var(--progress); }
+  .dot.resolved { background: var(--resolved); }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .chip {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    padding: 7px 14px; border-radius: 99px; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover { color: var(--text); border-color: var(--accent); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .controls .spacer { flex: 1; }
+  .controls .count { color: var(--text-muted); font-size: 0.82rem; }
+
+  /* Groups */
+  .group { margin-bottom: 26px; }
+  .group-head { display: flex; align-items: center; gap: 10px; margin: 0 4px 12px; }
+  .group-head h2 { font-size: 1rem; font-weight: 650; }
+  .group-head .g-count {
+    background: var(--surface2); color: var(--text-muted); font-size: 0.74rem;
+    padding: 2px 9px; border-radius: 99px; font-weight: 600;
+  }
+  .group-head .g-url { color: var(--text-muted); font-size: 0.78rem; text-decoration: none; margin-left: auto; }
+  .group-head .g-url:hover { color: var(--accent); }
+
+  /* Issue rows */
+  .issue {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px 16px; margin-bottom: 9px; display: flex; gap: 14px; align-items: flex-start;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .issue:hover { border-color: var(--accent); }
+  .issue .id { font-size: 0.78rem; font-weight: 700; color: var(--accent); min-width: 50px; padding-top: 1px; }
+  .issue .body { flex: 1; min-width: 0; }
+  .issue .ititle { font-weight: 600; font-size: 0.94rem; margin-bottom: 3px; }
+  .issue .idesc { color: var(--text-muted); font-size: 0.85rem; white-space: pre-wrap; word-wrap: break-word;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .issue.expanded .idesc { -webkit-line-clamp: unset; }
+  .issue .ifoot { margin-top: 7px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 0.76rem; color: var(--text-muted); }
+  .issue .ifoot a { color: var(--text-muted); text-decoration: none; }
+  .issue .ifoot a:hover { color: var(--accent); }
+  .more { background: none; border: none; color: var(--accent); font-size: 0.76rem; cursor: pointer; padding: 0; }
+  .badge {
+    font-size: 0.7rem; font-weight: 650; padding: 3px 10px; border-radius: 99px; white-space: nowrap;
+    text-transform: uppercase; letter-spacing: 0.4px; align-self: flex-start;
+  }
+  .badge.open { background: var(--open-soft); color: var(--open); }
+  .badge.progress { background: var(--progress-soft); color: var(--progress); }
+  .badge.resolved { background: var(--resolved-soft); color: var(--resolved); }
+  .badge.closed { background: var(--closed-soft); color: var(--closed); }
+
+  .empty { text-align: center; color: var(--text-muted); padding: 40px; font-size: 0.9rem; }
+
+  footer { margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 0.78rem; }
+  footer strong { color: var(--text); }
+
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">P</div>
+      <div>
+        <h1>Potentially — Project Status</h1>
+        <div class="sub">Website feedback &amp; tasks · tracked via Marker.io</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="gen" id="genDate">Generated —</div>
+      <div>Live site: <a href="https://potentially.netlify.app/" target="_blank" rel="noopener">potentially.netlify.app</a></div>
+      <div>Prepared by Visions Design</div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card total"><div class="strip"></div><div class="num" id="cTotal">0</div><div class="lbl">Total Tasks</div></div>
+    <div class="card open"><div class="strip"></div><div class="num" id="cOpen">0</div><div class="lbl">Open</div></div>
+    <div class="card progress"><div class="strip"></div><div class="num" id="cProgress">0</div><div class="lbl">In Progress</div></div>
+    <div class="card resolved"><div class="strip"></div><div class="num" id="cResolved">0</div><div class="lbl">Resolved</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-head">
+      <span class="title">Overall progress</span>
+      <span class="pct" id="pctText">0% complete</span>
+    </div>
+    <div class="bar" id="bar"></div>
+    <div class="legend">
+      <div><span class="dot open"></span> Open</div>
+      <div><span class="dot progress"></span> In Progress</div>
+      <div><span class="dot resolved"></span> Resolved</div>
+    </div>
+  </div>
+
+  <div class="controls" id="filters">
+    <button class="chip active" data-filter="all">All</button>
+    <button class="chip" data-filter="Open">Open</button>
+    <button class="chip" data-filter="In Progress">In Progress</button>
+    <button class="chip" data-filter="Resolved">Resolved</button>
+    <div class="spacer"></div>
+    <span class="count" id="showingCount"></span>
+  </div>
+
+  <div id="groups"></div>
+
+  <footer>
+    Snapshot of <strong>Marker.io</strong> issues for the Potentially project ·
+    Status reflects data at time of generation. Ask Visions Design for an updated version anytime.
+  </footer>
+</div>
+
+<script>
+// ── Live Marker.io snapshot (project: Potentially Investor) ──
+const GENERATED_AT = "2026-06-12T17:08:00Z";
+const ISSUES = [
+  {id:"PI-14",title:"Footer motion throughout the site",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:24:23Z",desc:"Is it possible to get some motion or something around the footer that goes throughout the site?"},
+  {id:"PI-13",title:"Fix Aim Rule 26 sequence order",status:"Open",page:"Product",url:"https://potentially.netlify.app/product",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:17:06Z",desc:"Remove Aim Rule 26 after investors. Sequence should be:\n1. Product\n2. Newsroom\n3. Investors\n4. Aim 26\n5. Careers"},
+  {id:"PI-12",title:"Add hero header to Products & Business Solutions",status:"Open",page:"Product",url:"https://potentially.netlify.app/product",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:16:21Z",desc:"I would have a hero header here just so it's a bit more visual.\n\nAnd call the header \"Products & Business Solutions\".\n\nIf you check the updated document highlighted in yellow, I put some vernacular around some of the most important points.\n\nOne ad will be: the click to the app will be potentially.ai.\n\nThe workspace is now called Business Solutions, and there's some proof points in there.\n\nThen you can have a \"coming soon\".\n\nI suspect the best thing would be maybe for this section: cards that pop up have more details with an image above, possibly? - I'll leave you to think."},
+  {id:"PI-11",title:"Add cookies pop-up to homepage",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:14:19Z",desc:"At the start of the homepage, we'll need a cookies pop-up. Maybe do something translucent so we don't ruin the design."},
+  {id:"PI-10",title:"Replace with: Collective AI",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:13:48Z",desc:"Replace with: Collective AI"},
+  {id:"PI-9",title:"Remove \"now's the time\", just milestones",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:12:38Z",desc:"Remove now's the time, just milestones. It's a very AI-written phrase."},
+  {id:"PI-8",title:"Fix news carousel header and subtext",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:12:13Z",desc:"I put some notes in the document, but I'll leave them here.\n\nRemove all \"why the opportunity is now\" and the subtext. This should all be pulling in a news carousel.\n\nHeader: The latest news from Potentially\nSub: insert some text that mirrors or talks about the latest information on the company."},
+  {id:"PI-7",title:"Homepage copy rewrite (full flow)",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T16:11:17Z",desc:"I can't see my previous comments, so I thought it'd be easier just to document the whole flow as one sentence, as opposed to each individual line.\n\nHeader: Potentially* a new AI economy.\nSub: While models have laid the foundations, the infrastructure where people create, protect, and earn from AI is yet to be built.\n\nHeader: There are two possible futures.\nValue is absorbed by closed labs.\nOr value remains with people.\nWe believe in the latter.\n\nHeader: Building products and services that serve the collective.\nSub: Potentially has integrated leading models into one protected environment, providing smart routing to the most relevant model for the task.\nSub: Frontier models. All modalities. Protected environments.\n\nHeader: One platform. 1000+ models. All modalities. Smart routing. Private and secure.\nWe call this Collective AI."},
+  {id:"PI-6",title:"Header copy: model agnostic infrastructure",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:47:02Z",desc:"Change to:\n\nHeader: Model agnostic infrastructure in service of people and business."},
+  {id:"PI-5",title:"Copy change: \"Or to people.\"",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:44:27Z",desc:"Ignore my last tech change about Collective.\n\nChange to: Or to people."},
+  {id:"PI-4",title:"Copy change: \"Or to the collective.\"",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:43:19Z",desc:"Or to the collective."},
+  {id:"PI-3",title:"Copy change: \"Value is absorbed into a few models.\"",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:41:06Z",desc:"Change text to:\n\nValue is absorbed into a few models."},
+  {id:"PI-2",title:"Copy change: \"There are two possible futures\"",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:38:20Z",desc:"Change text to:\nThere are two possible futures"},
+  {id:"PI-1",title:"Remove voice over",status:"Open",page:"Homepage",url:"https://potentially.netlify.app/?bug",reporter:"Oliver Yonchev",createdAt:"2026-06-12T15:34:33Z",desc:"Remove the voice over. Keep the music for now, and we can refine what the tracking experience is after."}
+];
+
+const STATUS_CLASS = { "Open":"open", "In Progress":"progress", "Resolved":"resolved", "Closed":"closed" };
+let activeFilter = "all";
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+
+function renderSummary() {
+  const counts = { total: ISSUES.length, Open:0, "In Progress":0, Resolved:0, Closed:0 };
+  ISSUES.forEach(i => counts[i.status]++);
+  document.getElementById('cTotal').textContent = counts.total;
+  document.getElementById('cOpen').textContent = counts.Open;
+  document.getElementById('cProgress').textContent = counts["In Progress"];
+  document.getElementById('cResolved').textContent = counts.Resolved;
+
+  const done = counts.Resolved + counts.Closed;
+  const pct = counts.total ? Math.round((done / counts.total) * 100) : 0;
+  document.getElementById('pctText').textContent = pct + '% complete';
+  const bar = document.getElementById('bar');
+  const seg = (n, cls) => n ? `<span class="b-${cls}" style="width:${(n/counts.total)*100}%"></span>` : '';
+  bar.innerHTML = seg(counts.Open,'open') + seg(counts["In Progress"],'progress') + seg(counts.Resolved + counts.Closed,'resolved');
+
+  document.getElementById('genDate').textContent = 'Generated ' + fmtDate(GENERATED_AT);
+}
+
+function renderGroups() {
+  const list = activeFilter === 'all' ? ISSUES : ISSUES.filter(i => i.status === activeFilter);
+  document.getElementById('showingCount').textContent =
+    `Showing ${list.length} of ${ISSUES.length} task${ISSUES.length===1?'':'s'}`;
+
+  const groupsEl = document.getElementById('groups');
+  if (!list.length) { groupsEl.innerHTML = '<div class="empty">No tasks match this filter.</div>'; return; }
+
+  // group by page
+  const byPage = {};
+  list.forEach(i => { (byPage[i.page] = byPage[i.page] || []).push(i); });
+  const order = ['Homepage', 'Product'];
+  const pages = Object.keys(byPage).sort((a,b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    return (ia===-1?99:ia) - (ib===-1?99:ib);
+  });
+
+  groupsEl.innerHTML = pages.map(page => {
+    const items = byPage[page];
+    const pageUrl = items[0].url;
+    return `
+      <div class="group">
+        <div class="group-head">
+          <h2>${page}</h2>
+          <span class="g-count">${items.length}</span>
+          <a class="g-url" href="${pageUrl}" target="_blank" rel="noopener">View page ↗</a>
+        </div>
+        ${items.map(renderIssue).join('')}
+      </div>`;
+  }).join('');
+
+  attachExpand();
+}
+
+function renderIssue(i) {
+  const cls = STATUS_CLASS[i.status] || 'open';
+  const needsMore = i.desc && i.desc.length > 140;
+  return `
+    <div class="issue">
+      <div class="id">${i.id}</div>
+      <div class="body">
+        <div class="ititle">${escapeHtml(i.title)}</div>
+        ${i.desc ? `<div class="idesc">${escapeHtml(i.desc)}</div>` : ''}
+        ${needsMore ? '<button class="more">Show more</button>' : ''}
+        <div class="ifoot">
+          <span>Reported by ${escapeHtml(i.reporter)}</span>
+          <span>${fmtDate(i.createdAt)}</span>
+          <a href="${i.url}" target="_blank" rel="noopener">Open in context ↗</a>
+        </div>
+      </div>
+      <span class="badge ${cls}">${i.status}</span>
+    </div>`;
+}
+
+function attachExpand() {
+  document.querySelectorAll('.more').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const issue = e.target.closest('.issue');
+      issue.classList.toggle('expanded');
+      btn.textContent = issue.classList.contains('expanded') ? 'Show less' : 'Show more';
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('filters').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  activeFilter = chip.dataset.filter;
+  renderGroups();
+});
+
+renderSummary();
+renderGroups();
+</script>
+</body>
+</html>
